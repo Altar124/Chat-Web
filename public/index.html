@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Chat Realtime — Demo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --accent: #2563eb; }
+    html,body,#app{height:100%}
+    body { font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background: #f8fafc; }
+    .scrollbar { scrollbar-width: thin; scrollbar-color: rgba(100,116,139,.4) transparent; }
+    .bubble { max-width: 78%; word-break:break-word; }
+  </style>
+</head>
+<body>
+  <div id="app" class="min-h-screen flex items-center justify-center p-6">
+    <div class="w-full max-w-4xl bg-white rounded-2xl shadow-lg grid grid-cols-1 md:grid-cols-3 overflow-hidden">
+      <!-- sidebar -->
+      <aside class="md:col-span-1 border-r p-4 bg-gradient-to-b from-white to-gray-50">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-[var(--accent)] text-white rounded-lg flex items-center justify-center font-bold">C</div>
+            <div>
+              <div class="text-lg font-semibold">Chat Demo</div>
+              <div id="userLabel" class="text-sm text-gray-500">Anon</div>
+            </div>
+          </div>
+          <button id="settingsBtn" class="p-2 rounded-md hover:bg-gray-100" title="Settings">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15.5A3.5 3.5 0 1 0 12 8.5a3.5 3.5 0 0 0 0 7z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06A2 2 0 1 1 2.3 16.88l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09c.69 0 1.3-.38 1.51-1a1.65 1.65 0 0 0-.33-1.82L4.3 3.29A2 2 0 1 1 7.13.46l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V0a2 2 0 1 1 4 0v.09c.69 0 1.3.38 1.51 1 .18.62.77 1.03 1.51 1.03H21a2 2 0 1 1 0 4h-.09c-.69 0-1.3.38-1.51 1-.18.62-.77 1.03-1.51 1.03H19.4z"></path></svg>
+          </button>
+        </div>
+
+        <div class="mb-3">
+          <input id="search" placeholder="Cari room atau user..." class="w-full px-3 py-2 rounded-lg border text-sm focus:outline-none focus:ring-1 focus:ring-[var(--accent)]" />
+        </div>
+
+        <div>
+          <div class="text-xs font-medium text-gray-400 mb-2">Rooms</div>
+          <div id="roomsList" class="space-y-2">
+            <button data-id="room-demo" class="roomBtn w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 flex items-center justify-between">
+              <span># Demo Room</span>
+              <span class="text-xs text-gray-400">2</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="mt-6 text-xs text-gray-400">Connected to: <span id="status" class="text-gray-600">offline</span></div>
+      </aside>
+
+      <!-- chat area -->
+      <main class="md:col-span-2 flex flex-col">
+        <div class="flex-1 p-4 overflow-hidden flex flex-col">
+          <div id="chatHeader" class="flex items-center justify-between mb-3">
+            <div>
+              <div id="roomName" class="font-semibold text-lg">Pilih room</div>
+              <div id="roomSub" class="text-sm text-gray-500">Realtime. End-to-end encrypted</div>
+            </div>
+            <div class="text-sm text-gray-500">Last seen: <span id="lastSeen">-</span></div>
+          </div>
+
+          <div id="messages" class="flex-1 overflow-auto px-2 py-3 scrollbar" style="background: linear-gradient(180deg, #fff 0%, #f8fafc 100%);">
+            <!-- messages appended here -->
+          </div>
+
+          <div class="mt-3 pt-3 border-t">
+            <div class="flex items-center gap-3">
+              <label for="file" class="flex items-center gap-2 cursor-pointer px-3 py-2 rounded-lg border hover:bg-gray-50">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span class="text-sm text-gray-600">Attach</span>
+              </label>
+              <input id="file" type="file" class="hidden" />
+
+              <input id="input" class="flex-1 px-4 py-3 rounded-lg border focus:outline-none focus:ring-1 focus:ring-[var(--accent)]" placeholder="Ketik pesan atau '@' untuk mention..." />
+
+              <button id="send" class="px-4 py-3 bg-[var(--accent)] text-white rounded-lg shadow-sm hover:opacity-95">Kirim</button>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- toast -->
+    <div id="toast" class="fixed bottom-6 right-6 invisible max-w-xs"></div>
+  </div>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+import sodium from 'https://cdn.jsdelivr.net/npm/libsodium-wrappers/+esm'
+import pako from 'https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.esm.mjs'
+
+const SUPABASE_URL = 'https://YOUR_SUPABASE_URL'
+const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY'
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
+
+const $ = id => document.getElementById(id)
+const messagesEl = $('messages'), statusEl = $('status'), sendBtn = $('send'), inputEl = $('input'), fileEl = $('file'), roomNameEl = $('roomName'), userLabel = $('userLabel'), toastEl = $('toast'), roomSub = $('roomSub')
+
+await sodium.ready
+const s = sodium
+const { to_base64, from_base64, randombytes_buf, crypto_secretbox_easy, crypto_secretbox_open_easy, from_string, to_string } = s
+
+const ROOM_ID = 'room-demo'
+
+function toast(message, timeout=3500) {
+  toastEl.classList.remove('invisible')
+  toastEl.innerHTML = '<div class="p-3 bg-white rounded-lg shadow-md border text-sm">'+message+'</div>'
+  setTimeout(()=>{ toastEl.classList.add('invisible') }, timeout)
+}
+
+function ensureRoomKey() {
+  let k = localStorage.getItem('roomkey:' + ROOM_ID)
+  if (!k) {
+    const key = randombytes_buf(32)
+    k = to_base64(key)
+    localStorage.setItem('roomkey:' + ROOM_ID, k)
+  }
+  return k
+}
+
+function encryptText(symKeyBase64, plain) {
+  const key = from_base64(symKeyBase64)
+  const nonce = randombytes_buf(sodium.crypto_secretbox_NONCEBYTES)
+  const cipher = crypto_secretbox_easy(from_string(plain), nonce, key)
+  const data = new Uint8Array(nonce.length + cipher.length)
+  data.set(nonce, 0); data.set(cipher, nonce.length)
+  return to_base64(data)
+}
+function decryptText(symKeyBase64, cipherBase64) {
+  const key = from_base64(symKeyBase64)
+  const data = from_base64(cipherBase64)
+  const nonce = data.slice(0, sodium.crypto_secretbox_NONCEBYTES)
+  const cipher = data.slice(sodium.crypto_secretbox_NONCEBYTES)
+  const plain = crypto_secretbox_open_easy(cipher, nonce, key)
+  return to_string(plain)
+}
+
+function renderMessage(obj, isMine=false) {
+  const wrap = document.createElement('div')
+  wrap.className = 'mb-3 flex ' + (isMine ? 'justify-end' : 'justify-start')
+  const bubble = document.createElement('div')
+  bubble.className = 'bubble inline-block p-3 rounded-xl ' + (isMine ? 'bg-[var(--accent)] text-white' : 'bg-gray-100 text-gray-800')
+  if (obj.type === 'text') {
+    bubble.textContent = obj.body
+  } else if (obj.type === 'file') {
+    const a = document.createElement('a')
+    a.href = obj.url || '#'
+    a.target = '_blank'
+    a.rel = 'noreferrer'
+    a.textContent = obj.name || 'Attachment'
+    a.className = 'underline text-sm'
+    bubble.appendChild(a)
+  } else {
+    bubble.textContent = '[unknown]'
+  }
+  wrap.appendChild(bubble)
+  messagesEl.appendChild(wrap)
+  messagesEl.scrollTop = messagesEl.scrollHeight
+}
+
+async function loadMessages() {
+  try {
+    const { data } = await supabase.from('messages').select('*').eq('room_id', ROOM_ID).order('created_at', { ascending: true })
+    const roomKey = ensureRoomKey()
+    if (data) {
+      for (const m of data) {
+        try {
+          const plain = JSON.parse(decryptText(roomKey, m.ciphertext))
+          renderMessage(plain, m.sender_id === localStorage.getItem('my_id'))
+        } catch (e) {
+          renderMessage({ type:'text', body: '[tidak bisa dekripsi]' })
+        }
+      }
+    }
+    statusEl.textContent = 'connected'
+  } catch (err) {
+    statusEl.textContent = 'error'
+    toast('Gagal memuat pesan: ' + (err.message || err))
+  }
+}
+
+const channel = supabase.channel('public:messages')
+  .on('postgres_changes', { event:'INSERT', schema:'public', table:'messages', filter:`room_id=eq.${ROOM_ID}` }, payload => {
+    const roomKey = ensureRoomKey()
+    try {
+      const plain = JSON.parse(decryptText(roomKey, payload.new.ciphertext))
+      renderMessage(plain, payload.new.sender_id === localStorage.getItem('my_id'))
+    } catch (e) {
+      renderMessage({ type:'text', body: '[tidak bisa dekripsi]' })
+    }
+  }).subscribe()
+
+sendBtn.addEventListener('click', async () => {
+  const v = inputEl.value.trim()
+  if (!v) return
+  const roomKey = ensureRoomKey()
+  const cipher = encryptText(roomKey, JSON.stringify({ type:'text', body: v }))
+  try {
+    await supabase.from('messages').insert([{ room_id: ROOM_ID, sender_id: localStorage.getItem('my_id') || 'anon', ciphertext: cipher }])
+    inputEl.value = ''
+  } catch (err) { toast('Gagal kirim: ' + (err.message || err)) }
+})
+
+fileEl.addEventListener('change', async (e) => {
+  const f = e.target.files[0]
+  if (!f) return
+  toast('Mengompres dan mengunggah...')
+  try {
+    let blob = f
+    if (f.type.startsWith('image/')) {
+      const img = await createImageBitmap(f)
+      const maxW = 1600
+      const ratio = Math.min(1, maxW / img.width)
+      const w = Math.round(img.width * ratio)
+      const h = Math.round(img.height * ratio)
+      const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h
+      const ctx = canvas.getContext('2d'); ctx.drawImage(img,0,0,w,h)
+      blob = await new Promise(res=>canvas.toBlob(res,'image/jpeg',0.78))
+    }
+    const ab = await blob.arrayBuffer()
+    const compressed = pako.gzip(new Uint8Array(ab))
+    // base64 encode compressed
+    let bin = ''
+    for (let i=0;i<compressed.length;i++) bin += String.fromCharCode(compressed[i])
+    const b64 = btoa(bin)
+    const roomKey = ensureRoomKey()
+    const ciphertext = encryptText(roomKey, JSON.stringify({ type:'file', name: f.name, data: b64, mime: f.type }))
+    const name = `file-${Date.now()}-${f.name.replace(/\s+/g,'_')}`
+    const { error } = await supabase.storage.from('chat-files').upload(name, new Blob([ciphertext]), { contentType: 'application/octet-stream' })
+    if (error) throw error
+    const { data } = await supabase.storage.from('chat-files').createSignedUrl(name, 60 * 60 * 24)
+    const payload = { type:'file', name: f.name, url: data.signedUrl }
+    const msgCipher = encryptText(roomKey, JSON.stringify(payload))
+    await supabase.from('messages').insert([{ room_id: ROOM_ID, sender_id: localStorage.getItem('my_id') || 'anon', ciphertext: msgCipher }])
+    toast('Terunggah')
+  } catch (err) {
+    toast('Upload error: ' + (err.message || err))
+  }
+})
+
+document.querySelectorAll('.roomBtn').forEach(btn=>{
+  btn.addEventListener('click', ()=> {
+    const id = btn.dataset.id
+    // for demo we only have single room
+    roomNameEl.textContent = btn.textContent.trim()
+    loadMessages()
+  })
+})
+
+// initial setup
+if (!localStorage.getItem('my_id')) localStorage.setItem('my_id', 'anon-'+Date.now())
+userLabel.textContent = 'Anon'
+loadMessages()
+</script>
+
+</body>
+</html>
